@@ -1,33 +1,53 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <title>Login - Multi-Role Access</title>
-    <style>
-        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding-top: 50px; }
-        button { margin: 5px; padding: 10px 20px; cursor: pointer; width: 200px; }
-        .super-admin { background: #ff4d4d; color: white; border: none; }
-        .admin { background: #ffa500; border: none; }
-        .others { background: #e1e1e1; border: 1px solid #ccc; }
-    </style>
+    <link rel="stylesheet" href="style.css">
+    <title>Masuk - Sistem Akses</title>
 </head>
-<body>
-    <h2>Sistem Login Role-Based</h2>
-    <p>Silahkan pilih role untuk masuk ke Dashboard:</p>
-    
-    <button class="super-admin" onclick="login('super_admin')">Login Super Admin</button>
-    <button class="admin" onclick="login('admin')">Login Admin</button>
-    <button class="others" onclick="login('supervisor')">Login Supervisor</button>
-    <button class="others" onclick="login('operator')">Login Operator</button>
-    <button class="others" onclick="login('user')">Login User</button>
-    <button class="others" onclick="login('guest')">Login Guest</button>
+<body data-theme="dark"> <!-- Default Theme -->
+    <div class="login-card">
+        <h2>Selamat Datang</h2>
+        <p>Silakan masuk ke akun Anda</p>
+        <form id="loginForm">
+            <input type="text" id="username" placeholder="Username" required>
+            <input type="password" id="password" placeholder="Password" required>
+            <button type="submit" id="loginBtn">Masuk</button>
+        </form>
+        <p id="msg"></p>
+    </div>
 
     <script>
-        function login(role) {
-            localStorage.setItem('role', role);
-            localStorage.setItem('isLoggedIn', 'true');
-            window.location.href = 'index.html';
-        }
+        const GAS_URL = "URL_WEB_APP_GAS_KAMU";
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('loginBtn');
+            btn.innerText = "Memproses...";
+            
+            const payload = {
+                username: document.getElementById('username').value,
+                password: document.getElementById('password').value
+            };
+
+            try {
+                const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) });
+                const data = await res.json();
+
+                if (data.success) {
+                    // Simpan semua info ke local storage
+                    localStorage.setItem('session_uuid', data.uuid);
+                    localStorage.setItem('user_theme', data.userTheme);
+                    localStorage.setItem('user_role', data.role);
+                    window.location.href = 'index.html';
+                } else {
+                    alert("Gagal: " + data.message);
+                }
+            } catch (err) {
+                alert("Terjadi kesalahan koneksi.");
+            } finally {
+                btn.innerText = "Masuk";
+            }
+        });
     </script>
 </body>
 </html>
