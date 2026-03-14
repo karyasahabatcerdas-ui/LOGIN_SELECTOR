@@ -34,10 +34,14 @@
                 const data = await res.json();
 
                 if (data.success) {
-                    // Simpan semua info ke local storage
                     localStorage.setItem('session_uuid', data.uuid);
-                    localStorage.setItem('user_theme', data.userTheme);
+                    localStorage.setItem('user_name', data.username);
                     localStorage.setItem('user_role', data.role);
+                    localStorage.setItem('user_theme', data.userTheme);
+                    localStorage.setItem('user_phone', data.phone);
+                    localStorage.setItem('user_email', data.email);
+                    localStorage.setItem('user_photo', data.photo);
+                    
                     window.location.href = 'index.html';
                 } else {
                     alert("Gagal: " + data.message);
