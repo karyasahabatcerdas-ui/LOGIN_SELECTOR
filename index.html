@@ -31,6 +31,81 @@
     </main>
 
     <script>
+        (function() {
+    // 1. Proteksi Storage: Jika user ubah 'role' di Application Tab, otomatis logout
+    window.addEventListener('storage', () => {
+        alert("Terdeteksi perubahan akses ilegal!");
+        logout();
+    });
+
+    // 2. Verifikasi Integritas (Anti-Tamper)
+    const role = localStorage.getItem('userRole');
+    const token = localStorage.getItem('sessionToken');
+
+    function verifyAccess(r, t) {
+        if (!r || !t) return false;
+        try {
+            // Cek apakah isi token mengandung string role yang sesuai
+            return atob(t).includes(r);
+        } catch (e) { return false; }
+    }
+
+    if (!verifyAccess(role, token)) {
+        localStorage.clear();
+        window.location.href = 'login.html';
+    }
+
+    // 3. Freeze Access Control (Mencegah modifikasi via Console)
+    const accessControl = Object.freeze({
+        'super_admin': { 
+            label: 'Super Admin', 
+            menu: ['Sistem Log', 'User Management', 'Billing'],
+            html: '<h1>Full Access</h1>' 
+        },
+        'admin': { 
+            label: 'Admin', 
+            menu: ['User Management', 'Input Data'],
+            html: '<h1>Admin Panel</h1>' 
+        },
+        'supervisor': { 
+            label: 'Supervisor', 
+            menu: ['Approval List', 'Laporan'],
+            html: '<h1>Supervisor View</h1>' 
+        },
+        'operator': { 
+            label: 'Operator', 
+            menu: ['Input Data'],
+            html: '<h1>Input Workspace</h1>' 
+        },
+        'user': { 
+            label: 'User', 
+            menu: ['Profil'],
+            html: '<h1>User Dashboard</h1>' 
+        },
+        'guest': { 
+            label: 'Guest', 
+            menu: ['Login'],
+            html: '<h1>Guest Page</h1>' 
+        }
+    });
+
+    // Jalankan initDashboard dengan data yang sudah terverifikasi
+    window.onload = () => {
+        const config = accessControl[role] || accessControl['guest'];
+        document.getElementById('role-display').innerText = config.label;
+        document.getElementById('ui-loader').innerHTML = config.html;
+        
+        // Render menu
+        const nav = document.getElementById('nav-container');
+        config.menu.forEach(m => {
+            const a = document.createElement('a');
+            a.className = 'menu-item';
+            a.innerText = m;
+            nav.appendChild(a);
+        });
+    };
+})();
+
         // 1. Ambil data dari memory client
         const userRole = localStorage.getItem('role') || 'guest';
         const isLoggedIn = localStorage.getItem('isLoggedIn');
