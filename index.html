@@ -4,34 +4,43 @@
     <link rel="stylesheet" href="style.css">
     <title>Dashboard</title>
 </head>
-<body>
+<body id="mainBody">
     <div class="login-card">
-        <h1 id="welcome">Memuat...</h1>
-        <p>Role Anda: <b id="roleLabel">-</b></p>
-        <div id="adminPanel" style="display: none;">
-            <hr>
-            <h3>Admin Tools</h3>
-            <button onclick="createUser()">Buat User Baru</button>
+        <img id="userPhoto" src="" alt="Profile" style="width:80px; border-radius:50%; display:none; margin: 0 auto 15px;">
+        <h2 id="welcome">Memuat...</h2>
+        <p>Email: <span id="userEmail"></span></p>
+        
+        <div id="adminPanel" style="display: none; border-top: 1px solid #444; margin-top: 15px; padding-top: 15px;">
+            <h4>Admin Menu</h4>
+            <button onclick="alert('Fitur Buat User')">Manage Users</button>
         </div>
-        <br>
-        <button onclick="logout()" style="background: #666;">Keluar</button>
+
+        <button onclick="logout()" style="background: #555; margin-top: 20px;">Keluar</button>
     </div>
 
     <script>
         window.onload = () => {
             const uuid = localStorage.getItem('session_uuid');
+            if (!uuid) { window.location.href = 'login.html'; return; }
+
+            // Terapkan Tema dari Database
             const theme = localStorage.getItem('user_theme') || 'dark';
-            const role = localStorage.getItem('user_role');
-
-            if (!uuid) window.location.href = 'login.html';
-
-            // Terapkan Tema
             document.body.setAttribute('data-theme', theme);
-            
-            // Terapkan Role Logic (Hidden UX)
-            document.getElementById('welcome').innerText = "Halo, User!";
-            document.getElementById('roleLabel').innerText = role;
 
+            // Tampilkan Data
+            document.getElementById('welcome').innerText = "Halo, " + localStorage.getItem('user_name');
+            document.getElementById('userEmail').innerText = localStorage.getItem('user_email');
+            
+            // Foto Profil (Jika ada)
+            const photo = localStorage.getItem('user_photo');
+            if(photo && photo !== "") {
+                const img = document.getElementById('userPhoto');
+                img.src = photo;
+                img.style.display = "block";
+            }
+
+            // Cek Role (Hide/Show Menu)
+            const role = localStorage.getItem('user_role');
             if (role === 'superadmin' || role === 'supervisor') {
                 document.getElementById('adminPanel').style.display = 'block';
             }
