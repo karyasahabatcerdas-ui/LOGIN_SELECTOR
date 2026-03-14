@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Login - Multi-Role Access</title>
+    <style>
+        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding-top: 50px; }
+        button { margin: 5px; padding: 10px 20px; cursor: pointer; width: 200px; }
+        .super-admin { background: #ff4d4d; color: white; border: none; }
+        .admin { background: #ffa500; border: none; }
+        .others { background: #e1e1e1; border: 1px solid #ccc; }
+    </style>
+</head>
+<body>
+    <h2>Sistem Login Role-Based</h2>
+    <p>Silahkan pilih role untuk masuk ke Dashboard:</p>
+    
+    <button class="super-admin" onclick="login('super_admin')">Login Super Admin</button>
+    <button class="admin" onclick="login('admin')">Login Admin</button>
+    <button class="others" onclick="login('supervisor')">Login Supervisor</button>
+    <button class="others" onclick="login('operator')">Login Operator</button>
+    <button class="others" onclick="login('user')">Login User</button>
+    <button class="others" onclick="login('guest')">Login Guest</button>
+
+    <script>
+        function login(role) {
+            localStorage.setItem('role', role);
+            localStorage.setItem('isLoggedIn', 'true');
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>
