@@ -68,6 +68,13 @@
                 <label><i class="fas fa-phone"></i> WhatsApp Number</label>
                 <input type="text" id="edit_phone" placeholder="08xxxx">
             </div>
+            <div class="input-group" style="position: relative;">
+                <label>Password Baru</label>
+                <input type="password" id="new_pass" placeholder="••••••••">
+                <i class="fas fa-eye" id="togglePass" 
+                   style="position: absolute; right: 15px; top: 35px; cursor: pointer; color: var(--accent);"></i>
+            </div>
+
 
             <!-- ADMIN CONTROLS -->
             <div id="adminControl" style="display:none; background: rgba(var(--accent-rgb), 0.1); padding:15px; border-radius:8px; border-left:4px solid var(--accent); margin-top:20px;">
@@ -122,7 +129,7 @@
     </div>
 
     <script>
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbz9e1DbS_TI1vp63t5VUDPXZPH9EEQhOTqXacB_9cttI2Pxggmtn-KveoqaOV4aNXbt/exec";
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbwEh5UPjM3rjs_9aPo1lkd27ByzCKN0og9PiXThZUSWFYgy_lcj--QUkyn01rrlY4XH/exec";
         const FD_APP_URL = "1qLtWF3BR6E24aws6dgaNXWiA5OiuJO0X";
 
         window.onload = () => {
@@ -230,6 +237,16 @@
                 `;
             });
         }
+        const togglePass = document.querySelector('#togglePass');
+        const password = document.querySelector('#new_pass');
+        
+        togglePass.addEventListener('click', function (e) {
+            // toggle tipe input
+            const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+            password.setAttribute('type', type);
+            // toggle icon
+            this.classList.toggle('fa-eye-slash');
+        });
 
         function toggleAddForm() {
             const f = document.getElementById('addUserForm');
