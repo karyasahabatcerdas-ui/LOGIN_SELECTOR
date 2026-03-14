@@ -1,182 +1,46 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <title>Dashboard Sistem</title>
-    <style>
-        body { font-family: sans-serif; margin: 0; display: flex; }
-        #sidebar { width: 250px; height: 100vh; background: #2c3e50; color: white; padding: 20px; }
-        #main-content { flex-grow: 1; padding: 30px; background: #f4f7f6; }
-        .menu-item { display: block; padding: 10px; color: white; text-decoration: none; border-bottom: 1px solid #34495e; }
-        .menu-item:hover { background: #34495e; }
-        .badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; background: #e74c3c; }
-        #logout-btn { margin-top: 20px; cursor: pointer; color: #ff7675; border: none; background: none; }
-    </style>
+    <link rel="stylesheet" href="style.css">
+    <title>Dashboard</title>
 </head>
 <body>
-
-    <aside id="sidebar">
-        <h3>App Menu</h3>
-        <div id="nav-container">
-            <!-- Navigasi akan di-load di sini secara dinamis -->
+    <div class="login-card">
+        <h1 id="welcome">Memuat...</h1>
+        <p>Role Anda: <b id="roleLabel">-</b></p>
+        <div id="adminPanel" style="display: none;">
+            <hr>
+            <h3>Admin Tools</h3>
+            <button onclick="createUser()">Buat User Baru</button>
         </div>
-        <button id="logout-btn" onclick="logout()">Logout</button>
-    </aside>
-
-    <main id="main-content">
-        <h1>Dashboard <span id="role-display" class="badge"></span></h1>
-        <div id="ui-loader">
-            <!-- Konten spesifik level di-load di sini -->
-        </div>
-    </main>
+        <br>
+        <button onclick="logout()" style="background: #666;">Keluar</button>
+    </div>
 
     <script>
-        (function() {
-    // 1. Proteksi Storage: Jika user ubah 'role' di Application Tab, otomatis logout
-    window.addEventListener('storage', () => {
-        alert("Terdeteksi perubahan akses ilegal!");
-        logout();
-    });
+        window.onload = () => {
+            const uuid = localStorage.getItem('session_uuid');
+            const theme = localStorage.getItem('user_theme') || 'dark';
+            const role = localStorage.getItem('user_role');
 
-    // 2. Verifikasi Integritas (Anti-Tamper)
-    const role = localStorage.getItem('userRole');
-    const token = localStorage.getItem('sessionToken');
+            if (!uuid) window.location.href = 'login.html';
 
-    function verifyAccess(r, t) {
-        if (!r || !t) return false;
-        try {
-            // Cek apakah isi token mengandung string role yang sesuai
-            return atob(t).includes(r);
-        } catch (e) { return false; }
-    }
+            // Terapkan Tema
+            document.body.setAttribute('data-theme', theme);
+            
+            // Terapkan Role Logic (Hidden UX)
+            document.getElementById('welcome').innerText = "Halo, User!";
+            document.getElementById('roleLabel').innerText = role;
 
-    if (!verifyAccess(role, token)) {
-        localStorage.clear();
-        window.location.href = 'login.html';
-    }
-
-    // 3. Freeze Access Control (Mencegah modifikasi via Console)
-    const accessControl = Object.freeze({
-        'super_admin': { 
-            label: 'Super Admin', 
-            menu: ['Sistem Log', 'User Management', 'Billing'],
-            html: '<h1>Full Access</h1>' 
-        },
-        'admin': { 
-            label: 'Admin', 
-            menu: ['User Management', 'Input Data'],
-            html: '<h1>Admin Panel</h1>' 
-        },
-        'supervisor': { 
-            label: 'Supervisor', 
-            menu: ['Approval List', 'Laporan'],
-            html: '<h1>Supervisor View</h1>' 
-        },
-        'operator': { 
-            label: 'Operator', 
-            menu: ['Input Data'],
-            html: '<h1>Input Workspace</h1>' 
-        },
-        'user': { 
-            label: 'User', 
-            menu: ['Profil'],
-            html: '<h1>User Dashboard</h1>' 
-        },
-        'guest': { 
-            label: 'Guest', 
-            menu: ['Login'],
-            html: '<h1>Guest Page</h1>' 
-        }
-    });
-
-    // Jalankan initDashboard dengan data yang sudah terverifikasi
-    window.onload = () => {
-        const config = accessControl[role] || accessControl['guest'];
-        document.getElementById('role-display').innerText = config.label;
-        document.getElementById('ui-loader').innerHTML = config.html;
-        
-        // Render menu
-        const nav = document.getElementById('nav-container');
-        config.menu.forEach(m => {
-            const a = document.createElement('a');
-            a.className = 'menu-item';
-            a.innerText = m;
-            nav.appendChild(a);
-        });
-    };
-})();
-
-        // 1. Ambil data dari memory client
-        const userRole = localStorage.getItem('role') || 'guest';
-        const isLoggedIn = localStorage.getItem('isLoggedIn');
-
-        // Redirect jika belum login (kecuali guest diizinkan)
-        if (!isLoggedIn && userRole !== 'guest') {
-            window.location.href = 'login.html';
-        }
-
-        // 2. Definisi Fitur & Hak Akses (Pola UX Load)
-        const accessControl = {
-            'super_admin': {
-                label: 'Super Admin',
-                menu: ['Sistem Log', 'User Management', 'Billing', 'Laporan Gaji', 'Input Data'],
-                html: '<h3>Full System Access</h3><p>Anda memiliki kontrol penuh atas infrastruktur.</p>'
-            },
-            'admin': {
-                label: 'Admin',
-                menu: ['User Management', 'Laporan Gaji', 'Input Data'],
-                html: '<h3>Admin Panel</h3><p>Kelola pengguna dan operasional harian.</p>'
-            },
-            'supervisor': {
-                label: 'Supervisor',
-                menu: ['Approval List', 'Laporan Tim', 'Input Data'],
-                html: '<h3>Supervisor Monitor</h3><p>Lakukan verifikasi dan tinjauan laporan tim.</p>'
-            },
-            'operator': {
-                label: 'Operator',
-                menu: ['Input Data', 'Update Stok'],
-                html: '<h3>Operator Workspace</h3><p>Silahkan masukkan data transaksi hari ini.</p>'
-            },
-            'user': {
-                label: 'User',
-                menu: ['Profile Saya', 'Riwayat Pesanan'],
-                html: '<h3>User Portal</h3><p>Selamat datang kembali di akun Anda.</p>'
-            },
-            'guest': {
-                label: 'Guest',
-                menu: ['Info Publik', 'Daftar Akun'],
-                html: '<h3>Welcome Guest</h3><p>Silahkan login untuk mengakses fitur lengkap.</p>'
+            if (role === 'superadmin' || role === 'supervisor') {
+                document.getElementById('adminPanel').style.display = 'block';
             }
         };
-
-        // 3. Eksekusi "Load" berdasarkan Level
-        function initDashboard() {
-            const config = accessControl[userRole];
-            
-            // Render Label Role
-            document.getElementById('role-display').innerText = config.label;
-
-            // Render Navigasi (Hanya yang diizinkan untuk role tersebut)
-            const nav = document.getElementById('nav-container');
-            config.menu.forEach(item => {
-                const link = document.createElement('a');
-                link.className = 'menu-item';
-                link.href = '#';
-                link.innerText = '• ' + item;
-                nav.appendChild(link);
-            });
-
-            // Render Body Konten
-            document.getElementById('ui-loader').innerHTML = config.html;
-        }
 
         function logout() {
             localStorage.clear();
             window.location.href = 'login.html';
         }
-
-        // Jalankan saat halaman dimuat
-        initDashboard();
     </script>
 </body>
 </html>
