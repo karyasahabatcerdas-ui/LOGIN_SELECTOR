@@ -5,51 +5,78 @@
     <title>Dashboard</title>
 </head>
 <body id="mainBody">
-    <div class="login-card">
-        <img id="userPhoto" src="" alt="Profile" style="width:80px; border-radius:50%; display:none; margin: 0 auto 15px;">
-        <h2 id="welcome">Memuat...</h2>
-        <p>Email: <span id="userEmail"></span></p>
-        
-        <div id="adminPanel" style="display: none; border-top: 1px solid #444; margin-top: 15px; padding-top: 15px;">
-            <h4>Admin Menu</h4>
-            <button onclick="alert('Fitur Buat User')">Manage Users</button>
-        </div>
-
-        <button onclick="logout()" style="background: #555; margin-top: 20px;">Keluar</button>
+    <div class="login-card" id="dashboard">
+    <div style="text-align:center">
+        <img id="userPhoto" src="" style="width:60px; border-radius:50%; margin-bottom:10px; border:2px solid var(--accent);">
+        <h3 id="welcome">Memuat...</h3>
+        <p id="userRoleBadge" style="font-size: 0.8rem; opacity: 0.7;"></p>
     </div>
 
-    <script>
-        window.onload = () => {
-            const uuid = localStorage.getItem('session_uuid');
-            if (!uuid) { window.location.href = 'login.html'; return; }
+    <!-- PANEL KHUSUS ADMIN/SUPERADMIN -->
+    <div id="adminPanel" style="display: none; border-top: 1px solid #444; margin-top: 20px; padding-top: 15px;">
+        <h4>Manajemen User</h4>
+        <div id="userList" style="max-height: 200px; overflow-y: auto; font-size: 0.9rem;">
+            <p>Memuat data user...</p>
+        </div>
+    </div>
 
-            // Terapkan Tema dari Database
-            const theme = localStorage.getItem('user_theme') || 'dark';
-            document.body.setAttribute('data-theme', theme);
+    <button onclick="logout()" style="background: #444; margin-top: 20px; width: 100%;">Keluar</button>
+</div>
 
-            // Tampilkan Data
-            document.getElementById('welcome').innerText = "Halo, " + localStorage.getItem('user_name');
-            document.getElementById('userEmail').innerText = localStorage.getItem('user_email');
-            
-            // Foto Profil (Jika ada)
-            const photo = localStorage.getItem('user_photo');
-            if(photo && photo !== "") {
-                const img = document.getElementById('userPhoto');
-                img.src = photo;
-                img.style.display = "block";
-            }
+<script>
+    const GAS_URL = "URL_WEB_APP_GAS_KAMU"; // Pastikan ini URL Executable GAS
 
-            // Cek Role (Hide/Show Menu)
-            const role = localStorage.getItem('user_role');
-            if (role === 'superadmin' || role === 'supervisor') {
-                document.getElementById('adminPanel').style.display = 'block';
-            }
-        };
+    window.onload = async () => {
+        const uuid = localStorage.getItem('session_uuid');
+        if (!uuid) return window.location.href = 'login.html';
 
-        function logout() {
-            localStorage.clear();
-            window.location.href = 'login.html';
+        // Set Tema & Profile
+        document.body.setAttribute('data-theme', localStorage.getItem('user_theme'));
+        document.getElementById('welcome').innerText = localStorage.getItem('user_name');
+        document.getElementById('userRoleBadge').innerText = "Akses: " + localStorage.getItem('user_role');
+        document.getElementById('userPhoto').src = localStorage.getItem('user_photo');
+
+        // Cek Role untuk Tampilkan Panel
+        const role = localStorage.getItem('user_role');
+        if (role === 'superadmin' || role === 'supervisor' || role === 'admin') {
+            document.getElementById('adminPanel').style.display = 'block';
+            fetchUsers(role);
         }
-    </script>
+    };
+
+    async function fetchUsers(role) {
+        const res = await fetch(`${GAS_URL}?action=getUsers&role=${role}`);
+        const result = await res.json();
+        const container = document.getElementById('userList');
+        container.innerHTML = "";
+
+        result.data.forEach(u => {
+            const isApproved = u.approvedBy && u.approvedBy !== "";
+            container.innerHTML += `
+                <div style="display:flex; justify-content:space-between; margin-bottom:10px; padding:5px; border-bottom:1px solid #333;">
+                    <span>${u.username} (${u.role})</span>
+                    ${!isApproved ? 
+                        `<button onclick="approveUser(${u.rowIndex})" style="width:auto; padding:2px 10px; font-size:0.7rem;">Approve</button>` : 
+                        `<span style="color:var(--accent)">✓</span>`}
+                </div>
+            `;
+        });
+    }
+
+    async function approveUser(rowIdx) {
+        const admin = localStorage.getItem('user_name');
+        const res = await fetch(`${GAS_URL}?action=approve&row=${rowIdx}&admin=${admin}`);
+        const result = await res.json();
+        if(result.success) {
+            alert("User Berhasil Disetujui!");
+            location.reload();
+        }
+    }
+
+    function logout() {
+        localStorage.clear();
+        window.location.href = 'login.html';
+    }
+</script>
 </body>
 </html>
