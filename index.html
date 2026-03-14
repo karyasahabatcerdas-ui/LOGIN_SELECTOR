@@ -22,7 +22,38 @@
 
     <button onclick="logout()" style="background: #444; margin-top: 20px; width: 100%;">Keluar</button>
 </div>
+<div id="adminArea" style="display:none; margin-top:20px; border-top:2px solid var(--accent); padding-top:15px;">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h4>User Management</h4>
+        <button onclick="toggleForm()" style="width:auto; padding:5px 10px; font-size:0.7rem;">+ User</button>
+    </div>
 
+    <!-- Form Tambah User (Hidden) -->
+    <div id="addUserForm" style="display:none; background:rgba(0,0,0,0.1); padding:10px; border-radius:8px; margin-bottom:15px;">
+        <input type="text" id="new_user" placeholder="Username">
+        <input type="password" id="new_pass" placeholder="Password">
+        <select id="new_role">
+            <option value="user">User</option>
+            <option value="staff">Staff</option>
+            <option value="supervisor">Supervisor</option>
+        </select>
+        <input type="text" id="new_phone" placeholder="Phone">
+        <button onclick="saveUser()" style="background:var(--accent)">Simpan User</button>
+    </div>
+
+    <!-- Tabel User -->
+    <table style="width:100%; font-size:0.75rem; border-collapse:collapse; margin-top:10px;">
+        <thead>
+            <tr style="border-bottom:1px solid #666; text-align:left;">
+                <th>User</th>
+                <th>Role</th>
+                <th>ApprvBy</th>
+                <th>Aksi</th>
+            </tr>
+        </thead>
+        <tbody id="userTableBody"></tbody>
+    </table>
+</div>
 <script>
     const GAS_URL = "https://script.google.com/macros/s/AKfycbyk-NZwhjlakyMvKYtBv_kSjlhE5DoxfZmBdbX5QZKBp1VAYR0UMo_ZEoqqCFnNdsnn/exec"; // Pastikan ini URL Executable GAS
 
@@ -72,7 +103,59 @@
             location.reload();
         }
     }
-
+    // Fungsi Tambahan di Script index.html
+    async function loadUsers() {
+        const role = localStorage.getItem('user_role');
+        const res = await fetch(`${GAS_URL}?role=${role}`);
+        const data = await res.json();
+        const tbody = document.getElementById('userTableBody');
+        tbody.innerHTML = "";
+    
+        data.users.forEach(u => {
+            tbody.innerHTML += `
+                <tr style="border-bottom:1px solid #333;">
+                    <td>${u.username}</td>
+                    <td>${u.role}</td>
+                    <td>${u.approvedBy || 'PENDING'}</td>
+                    <td>
+                        <button onclick="deleteUser(${u.rowIndex})" style="background:red; padding:2px 5px; width:auto;">X</button>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+    
+    async function saveUser() {
+        const payload = {
+            action: "addUser",
+            adminName: localStorage.getItem('user_name'),
+            username: document.getElementById('new_user').value,
+            password: document.getElementById('new_pass').value,
+            role: document.getElementById('new_role').value,
+            phone: document.getElementById('new_phone').value,
+            theme: "dark" // default
+        };
+        const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) });
+        const result = await res.json();
+        if(result.success) { alert(result.message); loadUsers(); toggleForm(); }
+    }
+    
+    async function deleteUser(idx) {
+        if(!confirm("Hapus user ini?")) return;
+        const res = await fetch(GAS_URL, { 
+            method: 'POST', 
+            body: JSON.stringify({ action: "deleteUser", rowIndex: idx }) 
+        });
+        const result = await res.json();
+        if(result.success) loadUsers();
+    }
+    
+    function toggleForm() {
+        const f = document.getElementById('addUserForm');
+        f.style.display = f.style.display === 'none' ? 'block' : 'none';
+    }
+    
+    // Panggil loadUsers() di dalam window.onload jika role admin
     function logout() {
         localStorage.clear();
         window.location.href = 'login.html';
